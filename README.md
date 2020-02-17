@@ -114,7 +114,7 @@ Be patient! There is a built in delay of two minutes on service startup before d
 ## The What and the How
 
 ### Program flow
-You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data. When amr2mqtt is run it first starts rtl_tcp, then rtlamr, and then enters into its main loop. rtlamr is set up to return SCM, SCM+, and IDM messages from broadcasting meters in a JSON format and the main loop of the program reads this JSON output from rtlamr and pushes it to MQTT using the following logic:
+You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data. When amr2mqtt is run it first starts rtl_tcp, then rtlamr, and then enters into its main loop. rtlamr is set up to return SCM, SCM+, and IDM messages from broadcasting meters in a JSON format and the main loop of the program reads this JSON output from rtlamr and publishes it to MQTT using the following format:
 
 readings/{meter_id}/{message_type}
 
@@ -171,17 +171,71 @@ readings/{my_meter}/idm
 }
 ```
 
-For more information on the message types visit https://github.com/bemasher/rtlamr/wiki/Protocol
+For more information on the message types visit https://github.com/bemasher/rtlamr/wiki/Protocol. Message formats other than SCM, SCM+, and IDM are not currently supported by this fork.
 
-## Configure Home Assistant
+## Walkthrough: Home Assistant
 
-To use these values in Home Assistant,
+This section assumes you have Home Assistant configured to subscribe to a MQTT server. This is my configuration from Home Assistant.
+
+### Create sensors
+
+#### Electric
+
+My electric meter records in watt hours and broadcasts both SCM and IDM message types. I keep the raw data from the meter in its own sensor and create a templated sensor which divides the watt hour sensor by 1000 to get the kWh reading. My utility bills by kWh.
 ```
-sensor:
-  - platform: mqtt
-    state_topic: "readings/12345678/scm"
-    name: "Power Meter"
-    unit_of_measurement: kWh
-    
+#Electric Meter
+- platform: mqtt
+  state_topic: "readings/{meter_id}/scm"
+  name: "Electric Meter Consumption"
+  unit_of_measurement: Wh
+  value_template: "{{ (value_json.Message.Consumption | int) }}"
+  
+- platform: template
+  sensors:
+    electric_meter_consumption_kwh:
+      friendly_name: Electric Meter Consumption (Billing)
+      unit_of_measurement: 'kWh'
+      value_template: "{{ (((states('sensor.electric_meter_consumption')|int)/1000) | float) | round(2) }}"
   ```
 
+#### Gas
+
+My gas meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create a templated sensors which report in CCF (100 cubic feet) and in therms. My utility bills by therm.
+```
+#Gas Meter
+- platform: mqtt
+  state_topic: "readings/{meter_id}/scm"
+  name: "Gas Meter Consumption"
+  unit_of_measurement: ft3
+  value_template: "{{ (value_json.Message.Consumption | int) }}"
+
+- platform: template
+  sensors:
+    gas_meter_consumption_ccf:
+      friendly_name: Gas Meter Consumption (CCF)
+      unit_of_measurement: 'CCF'
+      value_template: "{{ (((states('sensor.gas_meter_consumption')|int) / 100) | float | round(2))  }}"
+    gas_meter_consumption_therm:
+      friendly_name: Gas Meter Consumption (Therm)
+      unit_of_measurement: 'Therm'
+      value_template: "{{ (((states('sensor.gas_meter_consumption_ccf')|float)*('.98'|float)) | float | round(2))}}"
+  ```
+
+#### Water
+
+My water meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create a templated sensors which reports in CCF (100 cubic feet). My utility bills by CCF.
+```
+#Water Meter
+- platform: mqtt
+  state_topic: "readings/29677808/scm"
+  name: "Water Meter Consumption"
+  unit_of_measurement: ft3
+  value_template: "{{ (value_json.Message.Consumption | int) }}"
+  
+- platform: template
+  sensors:
+    water_meter_consumption_ccf:
+      friendly_name: Water Meter Consumption
+      unit_of_measurement: 'CCF'
+      value_template: "{{ (((states('sensor.water_meter_consumption')|int) / 100) | float | round(2))  }}"
+  ```

@@ -113,7 +113,63 @@ Be patient! There is a built in delay of two minutes on service startup before d
 
 ## The What and the How
 
-You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data.
+###Program flow
+You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data. When amr2mqtt is run it first starts rtl_tcp, then rtlamr, and then enters into its main loop. rtlamr is set up to return SCM, SCM+, and IDM messages from broadcasting meters in a JSON format and the main loop of the program reads this JSON output from rtlamr and pushes it to MQTT using the following logic:
+
+readings/{meter_id}/{message_type}
+
+###Example
+
+For example, my electric meter broadcasts both SCM and IDM messages so the following topics would have JSON messages published to them: 
+
+readings/{my_meter}/scm 
+`
+{
+"Time":"2020-02-17T16:42:16.121571951Z",
+"Offset":0,
+"Length":0,
+"Type":"SCM",
+"Message": {
+  "ID":,
+  "Type":7,
+  "TamperPhy":2,
+  "TamperEnc":2,
+  "Consumption":974582,
+  "ChecksumVal":37576
+  }
+}
+`
+
+readings/{my_meter}/idm
+`
+{
+"Time":"2020-02-17T16:45:12.844042259Z",
+"Offset":0,
+"Length":0,
+"Type":"IDM",
+"Message": {
+  "Preamble":,
+  "PacketTypeID":28,
+  "PacketLength":92,
+  "HammingCode":198,
+  "ApplicationVersion":4,
+  "ERTType":7,
+  "ERTSerialNumber":,
+  "ConsumptionIntervalCount":235,
+  "ModuleProgrammingState":188,
+  "TamperCounters":"AgIAEgoA",
+  "AsynchronousCounters":0,
+  "PowerOutageFlags":"AAAAACAA",
+  "LastConsumptionCount":974588,
+  "DifferentialConsumptionIntervals:[6,6,5,9,10,7,5,4,8,9,9,9,5,5,6,11,13,8,5,4,6,9,8,8,7,6,4,5,4,5,5,4,3,3,7,8,8,3,5,5,4,9,12,7,4,3,3],
+  "TransmitTimeOffset":15,
+  "SerialNumberCRC":42424,
+  "PacketCRC":11799
+  }
+}
+`
+
+For more information on the message types visit https://github.com/bemasher/rtlamr/wiki/Protocol
 
 ## Configure Home Assistant
 

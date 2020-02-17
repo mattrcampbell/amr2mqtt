@@ -1,14 +1,15 @@
 [Unit]
-Description=AMR IDM to MQTT
+Description=AMR to MQTT
 After=network.target
 
 [Service]
 Type=simple
 User=root
-ExecStart=/opt/amridm2mqtt/amridm2mqtt
+ExecStartPre=-/bin/sleep 120
+ExecStart=/opt/amr2mqtt/amr2mqtt
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=amridm2mqtt
+SyslogIdentifier=amr2mqtt
 
 [Install]
 WantedBy=multi-user.target

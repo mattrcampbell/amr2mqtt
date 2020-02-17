@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+'''
+Runs rtlamr to watch for broadcasts from power/water/gas meters. If meter id
+is in the list, usage is sent to 'readings/{meter id}/(scm/scmplus/idm)'
+topic on the MQTT broker specified in settings.
+
+WATCHED_METERS = A Python list indicating those meter IDs to record and post.
+MQTT_HOST = String containing the MQTT server address.
+MQTT_PORT = An int containing the port the MQTT server is active on.
+
+'''
+import subprocess
+import signal
+import sys
+import time
+import psutil
+import json 
+import paho.mqtt.publish as publish
+import settings
+
+# uses signal to shutdown and hard kill opened processes and self
+def shutdown(signum, frame):
+    subprocess.call('/usr/bin/pkill -9 rtlamr', shell=True)
+    subprocess.call('/usr/bin/pkill -9 rtl_tcp', shell=True)
+    subprocess.call('/usr/bin/pkill -9 amr2mqtt', shell=True)
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, shutdown)
+signal.signal(signal.SIGINT, shutdown)
+
+# determine if a specified process is running 
+def process_exists(process_name):
+   '''
+   Check if there is any running process that contains the given name processName.
+   '''
+   #Iterate over the all the running process
+   for proc in psutil.process_iter():
+       try:
+           # Check if process name contains the given name string.
+           if process_name.lower() in proc.name().lower():
+               return True
+       except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+           pass
+   return False;
+
+auth = None
+
+if len(settings.MQTT_USER) and len(settings.MQTT_PASSWORD):
+    auth = {'username':settings.MQTT_USER, 'password':settings.MQTT_PASSWORD}
+
+# send data to MQTT broker defined in settings
+def send_mqtt(topic, payload,):
+    try:
+        publish.single(topic, payload=payload, qos=1, hostname=settings.MQTT_HOST, port=settings.MQTT_PORT, auth=auth)
+    except Exception as ex:
+        print("MQTT Publish Failed: " + str(ex))
+
+# start the rtl_tcp program
+rtltcp = subprocess.Popen([settings.RTL_TCP + " > /dev/null 2>&1 &"], shell=True,
+    stdin=None, stdout=None, stderr=None, close_fds=True)
+time.sleep(4)
+print("rtltcp started, waiting 4 seconds")
+
+# start the rtlamr program.
+rtlamr = subprocess.Popen([settings.RTLAMR,
+    '-msgtype=idm,scm,scm+',
+    '-format=json'], stdout=subprocess.PIPE)
+print("rtlamr started, waiting 4 seconds")
+time.sleep(4)
+
+while True:
+
+    #If a process to wait for has been defined, then wait for it to start in increments of 10 seconds
+    if len(settings.PROCESS_WAIT_FOR_START):
+         while not process_exists(settings.PROCESS_WAIT_FOR_START):     
+              print(settings.PROCESS_WAIT_FOR_START+' is not running, sleeping for 10 seconds')
+              time.sleep(10)
+
+    try:
+        # rtlamr's readline returns byte list, remove whitespace and convert to string
+        amrline = rtlamr.stdout.readline().decode()
+  
+        #Parse the incoming line of data
+        parsedjson = json.loads(amrline)   
+
+        #Get the ID based on type of message
+        if parsedjson["Type"] == 'SCM':
+            parsedmessage = parsedjson["Message"]
+            parsed_id = parsedmessage["ID"]
+            type = "scm"
+        if parsedjson["Type"] == 'SCM+':
+            parsedmessage = parsedjson["Message"]
+            parsed_id = parsedmessage["EndpointID"]
+            type = "scmplus"
+        if parsedjson["Type"] == 'IDM':
+            parsedmessage = parsedjson["Message"]
+            parsed_id = parsedmessage["ERTSerialNumber"]           
+            type = "idm"
+
+        # make sure the meter id is one we want
+        meter_id = int(parsed_id)
+        if len(settings.WATCHED_METERS) and meter_id not in settings.WATCHED_METERS:
+            continue
+
+        #push json to MQTT
+        send_mqtt('readings/' + str(meter_id) + '/'+type, amrline)
+
+    except:
+        time.sleep(2)

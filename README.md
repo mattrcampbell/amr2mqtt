@@ -1,15 +1,13 @@
-# AMRIDM2MQTT: Send AMR/ERT Power Meter Data Over MQTT
+# AMR2MQTT: Send AMR/ERT Meter Data Over MQTT
 
 ##### Copyright (c) 2018 Ben Johnson. Distributed under MIT License.
 
 Using an [inexpensive rtl-sdr dongle](https://www.amazon.com/s/ref=nb_sb_noss?field-keywords=RTL2832U), it's possible to listen for signals from ERT compatible smart meters using rtlamr. This script runs as a daemon, launches rtl_tcp and rtlamr, and parses the output from rtlamr. If this matches your meter, it will push the data into MQTT for consumption by Home Assistant, OpenHAB, or custom scripts.
 
-TODO: Video for Home Assistant
-
-
 ## Requirements
 
 Tested under Raspbian GNU/Linux 9.3 (stretch)
+Tested under Ubuntu 18.04.4 LTS
 
 ### rtl-sdr package
 
@@ -43,6 +41,10 @@ Install paho-mqtt package for python3
 
 `sudo pip3 install paho-mqtt`
 
+Install psutil package for python3
+
+`sudo pip3 install psutil`
+
 ### golang & rtlamr
 
 Install Go programming language & set gopath
@@ -71,37 +73,37 @@ Clone repo into opt
 
 `cd /opt`
 
-`sudo git clone https://github.com/ragingcomputer/amridm2mqtt.git`
+`sudo git clone https://github.com/chrcraven/amr2mqtt.git`
 
 ### Configure
 
 Copy template to settings.py
 
-`cd /opt/amridm2mqtt`
+`cd /opt/amr2mqtt`
 
 `sudo cp settings_template.py settings.py`
 
 Edit file and replace with appropriate values for your configuration
 
-`sudo nano /opt/amridm2mqtt/settings.py`
+`sudo nano /opt/amr2mqtt/settings.py`
 
 ### Install Service and Start
 
-Copy armidm2mqtt service configuration into systemd config
+Copy amr2mqtt service configuration into systemd config
 
-`sudo cp /opt/amridm2mqtt/amridm2mqtt.systemd.service /etc/systemd/system/amridm2mqtt.service`
+`sudo cp /opt/amr2mqtt/amr2mqtt.systemd.service /etc/systemd/system/amr2mqtt.service`
 
 Refresh systemd configuration
 
 `sudo systemctl daemon-reload`
 
-Start amridm2mqtt service
+Start amr2mqtt service
 
-`sudo service amridm2mqtt start`
+`sudo service amr2mqtt start`
 
-Set amridm2mqtt to run on startup
+Set amr2mqtt to run on startup
 
-`sudo systemctl enable amridm2mqtt.service`
+`sudo systemctl enable amr2mqtt.service`
 
 ### Configure Home Assistant
 
@@ -109,22 +111,18 @@ To use these values in Home Assistant,
 ```
 sensor:
   - platform: mqtt
-    state_topic: "readings/12345678/meter_reading"
+    state_topic: "readings/12345678/scm"
     name: "Power Meter"
     unit_of_measurement: kWh
-
-  - platform: mqtt
-    state_topic: "readings/12345678/meter_rate"
-    name: "Power Meter Avg Usage 5 mins"
-    unit_of_measurement: W
+    
   ```
 
 ## Testing
 
 Assuming you're using mosquitto as the server, and your meter's id is 12345678, you can watch for events using the command:
 
-`mosquitto_sub -t "readings/12345678/meter_reading"`
+`mosquitto_sub -t "readings/12345678/scm"`
 
 Or if you've password protected mosquitto
 
-`mosquitto_sub -t "readings/12345678/meter_reading" -u <user_name> -P <password>`
+`mosquitto_sub -t "readings/12345678/scm" -u <user_name> -P <password>`

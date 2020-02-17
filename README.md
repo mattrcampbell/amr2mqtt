@@ -84,7 +84,7 @@ Copy template to settings.py
 
 `sudo cp settings_template.py settings.py`
 
-Edit file and replace with appropriate values for your configuration. Leave watched meters blank to discover all broadcasting meters in your area. If you want the service to wait until another process is running (ie Mosquitto MQTT) use the top command to find the process name and populate PROCESS_WAIT_TO_START.
+Edit file and replace with appropriate values for your configuration. Leave watched meters blank to discover all broadcasting meters in your area. If you want the service to wait until another process is running (ie Mosquitto MQTT) use the top command to find the process name and populate PROCESS_WAIT_FOR_START.
 
 `sudo nano /opt/amr2mqtt/settings.py`
 

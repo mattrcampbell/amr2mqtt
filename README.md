@@ -200,7 +200,7 @@ My electric meter records in watt hours and broadcasts both SCM and IDM message 
 
 #### Gas
 
-My gas meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create a templated sensors which report in CCF (100 cubic feet) and in therms. My utility bills by therm.
+My gas meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create templated sensors which report in CCF (100 cubic feet) and in therms. My utility bills by therm.
 ```
 #Gas Meter
 - platform: mqtt
@@ -223,7 +223,7 @@ My gas meter reports in cubic feet and broadcasts the SCM message type. I keep t
 
 #### Water
 
-My water meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create a templated sensors which reports in CCF (100 cubic feet). My utility bills by CCF.
+My water meter reports in cubic feet and broadcasts the SCM message type. I keep the raw data from the meter in its own sensor and create a templated sensor which reports in CCF (100 cubic feet). My utility bills by CCF.
 ```
 #Water Meter
 - platform: mqtt

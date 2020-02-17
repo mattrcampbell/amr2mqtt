@@ -84,7 +84,7 @@ Copy template to settings.py
 
 `sudo cp settings_template.py settings.py`
 
-Edit file and replace with appropriate values for your configuration
+Edit file and replace with appropriate values for your configuration. Leave watched meters blank to discover all broadcasting meters in your area.
 
 `sudo nano /opt/amr2mqtt/settings.py`
 
@@ -106,7 +106,16 @@ Set amr2mqtt to run on startup
 
 `sudo systemctl enable amr2mqtt.service`
 
-### Configure Home Assistant
+
+### Testing
+
+Use a GUI or command line tool to view the 'readings' topic. I prefer to use a tool called MQTT Explorer which offers installation packages for Linux, Windows, and Apple. Download at https://mqtt-explorer.com/
+
+## The What and the How
+
+You have made it this far and now have data feeding into your MQTT server.
+
+## Configure Home Assistant
 
 To use these values in Home Assistant,
 ```
@@ -118,12 +127,3 @@ sensor:
     
   ```
 
-## Testing
-
-Assuming you're using mosquitto as the server, and your meter's id is 12345678, you can watch for events using the command:
-
-`mosquitto_sub -t "readings/12345678/scm"`
-
-Or if you've password protected mosquitto
-
-`mosquitto_sub -t "readings/12345678/scm" -u <user_name> -P <password>`

@@ -113,12 +113,12 @@ Be patient! There is a built in delay of two minutes on service startup before d
 
 ## The What and the How
 
-###Program flow
+### Program flow
 You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data. When amr2mqtt is run it first starts rtl_tcp, then rtlamr, and then enters into its main loop. rtlamr is set up to return SCM, SCM+, and IDM messages from broadcasting meters in a JSON format and the main loop of the program reads this JSON output from rtlamr and pushes it to MQTT using the following logic:
 
 readings/{meter_id}/{message_type}
 
-###Example
+### Example
 
 For example, my electric meter broadcasts both SCM and IDM messages so the following topics would have JSON messages published to them: 
 

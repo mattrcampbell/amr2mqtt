@@ -84,7 +84,7 @@ Copy template to settings.py
 
 `sudo cp settings_template.py settings.py`
 
-Edit file and replace with appropriate values for your configuration. Leave watched meters blank to discover all broadcasting meters in your area.
+Edit file and replace with appropriate values for your configuration. Leave watched meters blank to discover all broadcasting meters in your area. If you want the service to wait until another process is running (ie Mosquitto MQTT) use the top command to find the process name and populate PROCESS_WAIT_TO_START.
 
 `sudo nano /opt/amr2mqtt/settings.py`
 
@@ -109,11 +109,11 @@ Set amr2mqtt to run on startup
 
 ### Testing
 
-Use a GUI or command line tool to view the 'readings' topic. I prefer to use a tool called MQTT Explorer which offers installation packages for Linux, Windows, and Apple. Download at https://mqtt-explorer.com/
+Be patient! There is a built in delay of two minutes on service startup before data starts loading into MQTT. This delay is to ensure your machine is ready post boot. Use a GUI or command line tool to view the 'readings' topic on your MQTT server. I use a tool called MQTT Explorer which offers installation packages for Linux, Windows, and Apple. Download at https://mqtt-explorer.com/
 
 ## The What and the How
 
-You have made it this far and now have data feeding into your MQTT server.
+You have made it this far and now have data feeding into your MQTT server. Now it is time to understand how this program works so you can make informed choices as to how you use this data.
 
 ## Configure Home Assistant
 

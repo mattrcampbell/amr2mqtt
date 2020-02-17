@@ -239,3 +239,64 @@ My water meter reports in cubic feet and broadcasts the SCM message type. I keep
       unit_of_measurement: 'CCF'
       value_template: "{{ (((states('sensor.water_meter_consumption')|int) / 100) | float | round(2))  }}"
   ```
+
+### Install utility meter custom component
+
+As part of my installation I discovered that my meter readings would spike whenever I would restart Home Assistant. Since I like to tinker with my installation restarts are going to happen and to persist accurate readings across restarts I needed to use a custom component from https://github.com/tiaanv/hass-utility_meter_alternative to add a new option to the existing utility meter functionality. Follow the instructions from tiaanv. After installed follow the directions at https://developers.home-assistant.io/blog/2019/04/12/new-integration-structure.html to add a manifest.json and edit the domain in const.py to be 'utility_meter_custom'. 
+
+### Set up utility meters
+
+I have set up hourly, daily, weekly, and monthly meters for each 'billing' sensor.
+
+```
+#Utility meters
+utility_meter_custom:
+  electric_meter_monthly:
+    source: sensor.electric_meter_consumption_kwh
+    mode: alt
+    cycle: monthly
+  electric_meter_weekly:
+    source: sensor.electric_meter_consumption_kwh
+    mode: alt
+    cycle: weekly
+  electric_meter_daily:
+    source: sensor.electric_meter_consumption_kwh
+    mode: alt
+    cycle: daily
+  electric_meter_hourly:
+    source: sensor.electric_meter_consumption_kwh
+    mode: alt
+    cycle: hourly
+  water_meter_monthly:
+    source: sensor.water_meter_consumption_ccf
+    mode: alt
+    cycle: monthly
+  water_meter_weekly:
+    source: sensor.water_meter_consumption_ccf
+    mode: alt
+    cycle: weekly
+  water_meter_daily:
+    source: sensor.water_meter_consumption_ccf
+    mode: alt
+    cycle: daily
+  water_meter_hourly:
+    source: sensor.water_meter_consumption_ccf
+    mode: alt
+    cycle: hourly
+  gas_meter_monthly:
+    source: sensor.gas_meter_consumption_therm
+    mode: alt
+    cycle: monthly
+  gas_meter_weekly:
+    source: sensor.gas_meter_consumption_therm
+    mode: alt
+    cycle: weekly
+  gas_meter_daily:
+    source: sensor.gas_meter_consumption_therm
+    mode: alt
+    cycle: daily
+  gas_meter_hourly:
+    source: sensor.gas_meter_consumption_therm
+    mode: alt
+    cycle: hourly
+```

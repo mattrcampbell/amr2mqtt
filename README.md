@@ -7,6 +7,7 @@ Using an [inexpensive rtl-sdr dongle](https://www.amazon.com/s/ref=nb_sb_noss?fi
 ## Requirements
 
 Tested under Raspbian GNU/Linux 9.3 (stretch)
+
 Tested under Ubuntu 18.04.4 LTS
 
 ### rtl-sdr package

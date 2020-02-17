@@ -123,7 +123,8 @@ readings/{meter_id}/{message_type}
 For example, my electric meter broadcasts both SCM and IDM messages so the following topics would have JSON messages published to them: 
 
 readings/{my_meter}/scm 
-`
+
+```
 {
 "Time":"2020-02-17T16:42:16.121571951Z",
 "Offset":0,
@@ -138,10 +139,11 @@ readings/{my_meter}/scm
   "ChecksumVal":37576
   }
 }
-`
+```
 
 readings/{my_meter}/idm
-`
+
+```
 {
 "Time":"2020-02-17T16:45:12.844042259Z",
 "Offset":0,
@@ -167,7 +169,7 @@ readings/{my_meter}/idm
   "PacketCRC":11799
   }
 }
-`
+```
 
 For more information on the message types visit https://github.com/bemasher/rtlamr/wiki/Protocol
 

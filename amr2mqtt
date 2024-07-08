@@ -63,7 +63,7 @@ print("rtltcp started, waiting 4 seconds")
 
 # start the rtlamr program.
 rtlamr = subprocess.Popen([settings.RTLAMR,
-    '-msgtype=idm,scm,scm+',
+    '-msgtype=idm,scm,scm+,r900',
     '-format=json'], stdout=subprocess.PIPE)
 print("rtlamr started, waiting 4 seconds")
 time.sleep(4)
@@ -96,14 +96,55 @@ while True:
             parsedmessage = parsedjson["Message"]
             parsed_id = parsedmessage["ERTSerialNumber"]           
             type = "idm"
+        # {"Time":"2024-05-20T22:14:54.885280321-04:00","Offset":0,"Length":0,"Type":"R900","Message":{"ID":1577666820,"Unkn1":163,"NoUse":32,"BackFlow":0,"Consumption":167953,"Unkn3":0,"Leak":0,"LeakNow":0}}
+        if parsedjson["Type"] == 'R900':
+            parsedmessage = parsedjson["Message"]
+            parsed_id = parsedmessage["ID"]           
+            type = "r900"
 
+        # print("Line: "+amrline)
+        # print("Found id "+str(parsed_id))
         # make sure the meter id is one we want
         meter_id = int(parsed_id)
+        print(parsedjson)
+
+        print(meter_id)
+        with open('state.json', 'r') as f:
+            data = json.load(f)
+        if str(meter_id) in data:
+            print("FOUND!")
+            print(parsedmessage)
+            print(data[str(meter_id)])
+            diff = parsedmessage['Consumption'] - data[str(meter_id)]['lastread']
+            print("FOUND!")
+            print("Diff since last read is "+str(diff))
+
+            if diff > 0 :
+                data[str(meter_id)]['consumed']+=abs(diff)
+            else:
+                data[str(meter_id)]['returned']+=abs(diff)
+
+            data[str(meter_id)]['lastread'] = parsedmessage['Consumption']
+        else :
+            print("NOPE!")
+            data[str(meter_id)] = {"lastread":parsedmessage["Consumption"],"consumed":0,"returned":0};
+
+        with open("state.json", "w") as outfile:
+            json.dump(data, outfile)
+
+
         if len(settings.WATCHED_METERS) and meter_id not in settings.WATCHED_METERS:
             continue
 
+        parsedjson['Extended'] = {'consumed': data[str(meter_id)]['consumed'], 'returned': data[str(meter_id)]['returned']}
+        print("SEND")
+        print(parsedjson)
+
+        # print("FOUND!")
         #push json to MQTT
-        send_mqtt('readings/' + str(meter_id) + '/'+type, amrline)
+        #send_mqtt('readings/' + str(meter_id) + '/'+type, amrline)
+        send_mqtt('readings/' + str(meter_id) + '/'+type, json.dumps(parsedjson))
+        print("done\n");
 
     except:
         time.sleep(2)
